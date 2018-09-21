@@ -1,0 +1,136 @@
+/*
+theme name: homa
+Theme URI: https://wordpress.org/themes/homa/
+Author: hooraweb
+Description: test
+Version: 1.0
+Tags: blog
+*/
+body {
+  background-color: #fgfgfg;
+  color: red;
+  font-size: 14px;
+  direction: rtl;
+}
+
+.site-header {
+  border-bottom: 1px solid black;
+}
+
+.site-footer {
+  border-top: 1px solid black;
+  margin-top: 20px;
+}
+
+a:link,
+a:visited {
+  color: green;
+}
+
+div.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
+article.post {
+  border-bottom: 1px dotted black;
+}
+
+article.post:last-of-type {
+  padding-bottom: 20px;
+  border-bottom: none;
+}
+
+/* Navigation Menus */
+.site-nav ul li {
+  list-style: none;
+  float: right;
+  margin-left: 5px;
+}
+.site-nav ul {
+  margin: 0;
+  padding: 0;
+}
+
+/*site-header*/
+.site-header nav ul li a:link,
+.site-header nav ul li a:visited {
+  display: block;
+  padding: 10px 18px;
+  border: 1px solid #BBB;
+}
+
+.site-header ul li a {
+  text-decoration: none;
+  border-bottom: none;
+}
+
+.site-header nav ul li.current-menu-item a:link,
+.site-header nav ul li.current-menu-item a:visited {
+  background-color: #006ec3;
+  color: #FFF;
+}
+/*Footer Menu*/
+.site-footer nav ul li a:link,
+.site-footer nav ul li a:visited {
+  padding-left: 5px;
+  margin-left: 5px;
+  border-left: 1px dotted #BBB;
+}
+
+.site-footer nav ul li:last-of-type a:link,
+.site-footer nav ul li:last-of-type a:visited {
+  border: none;
+}
+
+/* Page style*/
+.page article h2 {
+  font-size: 300%;
+}
+
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.info-box {
+  width: 30%;
+  float: left;
+  padding: 10px;
+  margin: 0 30px 30px 0;
+}
+.children_links{
+  font-size: 120%;
+  display: inline-block;
+}
+.children_links li {
+  /* margin-right: : 20px; */
+}
+.children_links .parent_link{
+  /* float : right; */
+  font-size: 180%;
+
+}
+
+/*# sourceMappingURL=style.css.map */
+
+#breadcrumbs{
+    list-style:none;
+    margin:10px 0;
+    overflow:hidden;
+}
+
+#breadcrumbs li{
+    display:inline-block;
+    vertical-align:middle;
+    margin-right:15px;
+}
+
+#breadcrumbs .separator{
+    font-size:18px;
+    font-weight:100;
+    color:#ccc;
+}
