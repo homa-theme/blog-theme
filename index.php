@@ -16,19 +16,7 @@ get_header(); ?>
 				<button id="quick-add-button">Create Post</button>
 			</div>
 			<?php endif; ?>
-			<div id="greeting">hhhhhhhhhhh</div>
-			<script>
-			function Greeting( props ) {
-				return wp.element.createElement( 'span', null, 
-					'Hello ' + props.toWhom + '!'
-				);
-			}
-			
-			wp.element.render(
-				wp.element.createElement( Greeting, { toWhom: 'World' } ),
-				document.getElementById( 'greeting' )
-			);
-			</script>
+
 			<?php if (have_posts()) :
 				while (have_posts()) : the_post();
 
