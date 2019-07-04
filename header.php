@@ -1,24 +1,55 @@
-<htm>
-
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
 	<head>
-		<meta charset=bloginfo('charset')>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<!-- title va bloginfo name ja monde -->
-		<?php wp_head();?>
+		<meta charset="<?php bloginfo('charset'); ?>">
+		<meta name="viewport" content="width=device-width">
+		<title><?php bloginfo('name'); ?></title>
+		<?php wp_head(); ?>
 	</head>
-	<body <?php body_class(); ?>>
-		<div class="container">
-		<header class="site-header"><!-- header-->
-				<a href="<?php echo home_url() ?>"><h1><?php echo bloginfo('title'); ?></h1></a>
-				<h5><?php echo bloginfo('description');?></h5>
-				<nav class="site-nav clearfix">
-					<?php
-					 $args = array(
-						 'theme_location'=>'primary'
-					 );
-					 ?>
-					<?php wp_nav_menu($args); ?>
-				</nav>
-				<?php custom_breadcrumbs(); ?>
-		</header>
+	
+<body <?php body_class(); ?>>
+	
+	<div class="container">
+	
+		<!-- site-header -->
+		<header class="site-header">
+			
+			<!-- hd-search -->
+			<div class="hd-search">
+				<?php get_search_form(); ?>
+			</div><!-- /hd-search -->
+			
+			<h1><a href="<?php echo home_url(); ?>"><?php bloginfo('name'); ?></a></h1>
+			<h5><?php bloginfo('description'); ?> <?php if (is_page('portfolio')) { ?>
+				- Thank you for viewing our work
+			<?php }?></h5>
+			
+			
+			
+			<nav class="site-nav">
+				
+				<?php
+				
+				$args = array(
+					'theme_location' => 'primary'
+				);
+				
+				?>
+				
+				<?php wp_nav_menu(  $args ); ?>
+			</nav>
+			
+		</header><!-- /site-header -->
+		<div id="greeting"></div>
+			<script>
+			function Greeting( props ) {
+				return wp.element.createElement( 'span', null, 
+					'Hello ' + props.toWhom + '!'
+				);
+			}
+			
+			wp.element.render(
+				wp.element.createElement( Greeting, { toWhom: 'World' } ),
+				document.getElementById( 'greeting' )
+			);
+			</script>

@@ -1,266 +1,285 @@
 <?php
-function homa_resources()
-{
-  wp_enqueue_style('style',get_stylesheet_uri());
+
+function learningWordPress_resources() {
+	
+	wp_enqueue_style('style', get_stylesheet_uri());
+	wp_enqueue_script('main_js', get_template_directory_uri() . '/js/main.js', NULL, 1.0, true);
+
+	wp_localize_script('main_js', 'magicalData', array(
+		'nonce' => wp_create_nonce('wp_rest'),
+		'siteURL' => get_site_url()
+	));
+	
 }
-add_action( 'wp_enqueue_scripts', 'homa_resources' );
 
-//Navigation Menu
-function register_my_menus() {
-register_nav_menus(array(
-    'primary'=>__('primary menu'),
-    'footer'=>__('footer menu')
-  )
-);
+add_action('wp_enqueue_scripts', 'learningWordPress_resources');
+
+
+
+// Get top ancestor
+function get_top_ancestor_id() {
+	
+	global $post;
+	
+	if ($post->post_parent) {
+		$ancestors = array_reverse(get_post_ancestors($post->ID));
+		return $ancestors[0];
+		
+	}
+	
+	return $post->ID;
+	
 }
-add_action( 'init', 'register_my_menus' );
 
-function get_top_ancestor_id()
-{
-  global $post;
-  if($post->post_parent)
-  {
-    $parents=array_reverse(get_post_ancestors($post->ID));
-    return ($parents[0]);
-  }
-  //print_r($parents);
-  return $post->ID;
+// Does page have children?
+function has_children() {
+	
+	global $post;
+	
+	$pages = get_pages('child_of=' . $post->ID);
+	return count($pages);
+	
 }
-?>
-<?php
-// Breadcrumbs
-function custom_breadcrumbs() {
 
-    // Settings
-    $separator          = '>';
-    $breadcrums_id      = 'breadcrumbs';
-    $breadcrums_class   = 'breadcrumbs';
-    $home_title         = 'Homepage';
-
-    // If you have any custom post types with custom taxonomies, put the taxonomy name below (e.g. product_cat)
-    $custom_taxonomy    = 'product_cat';
-
-    // Get the query & post information
-    global $post,$wp_query;
-
-    // Do not display on the homepage
-    if ( !is_front_page() ) {
-
-        // Build the breadcrums
-        echo '<ul id="' . $breadcrums_id . '" class="' . $breadcrums_class . '">';
-
-        // Home page
-        echo '<li class="item-home"><a class="bread-link bread-home" href="' . get_home_url() . '" title="' . $home_title . '">' . $home_title . '</a></li>';
-        echo '<li class="separator separator-home"> ' . $separator . ' </li>';
-
-        if ( is_archive() && !is_tax() && !is_category() && !is_tag() ) {
-
-            echo '<li class="item-current item-archive"><strong class="bread-current bread-archive">' . post_type_archive_title($prefix, false) . '</strong></li>';
-
-        }
-        else if ( is_archive() && is_tax() && !is_category() && !is_tag() ) {
-
-            // If post is a custom post type
-            $post_type = get_post_type();
-            echo"archive - tax";
-            // If it is a custom post type display name and link
-            if($post_type != 'post')
-            {
-
-                $post_type_object = get_post_type_object($post_type);
-                print_r($post_type_object);
-                $post_type_archive = get_post_type_archive_link($post_type);
-
-                echo '<li class="item-cat item-custom-post-type-' . $post_type . '"><a class="bread-cat bread-custom-post-type-' . $post_type . '" href="' . $post_type_archive . '" title="' . $post_type_object->labels->name . '">' . $post_type_object->labels->name . '</a></li>';
-                echo '<li class="separator"> ' . $separator . ' </li>';
-
-            }
-            $custom_tax_name = get_queried_object()->name;
-            echo '<li class="item-current item-archive"><strong class="bread-current bread-archive">' . $custom_tax_name . '</strong></li>';
-        }
-        if ( is_single() ) {
-
-            // If post is a custom post type
-            $post_type = get_post_type();
-
-            // If it is a custom post type display name and link
-            if($post_type != 'post') {
-
-                $post_type_object = get_post_type_object($post_type);
-                $post_type_archive = get_post_type_archive_link($post_type);
-
-                echo '<li class="item-cat item-custom-post-type-' . $post_type . '"><a class="bread-cat bread-custom-post-type-' . $post_type . '" href="' . $post_type_archive . '" title="' . $post_type_object->labels->name . '">' . $post_type_object->labels->name . '</a></li>';
-                echo '<li class="separator"> ' . $separator . ' </li>';
-
-            }
-
-            // Get post category info
-            $category = get_the_category();
-
-            if(!empty($category)) {
-
-                // Get last category post is in
-                $last_category = end(array_values($category));
-
-                // Get parent any categories and create array
-                $get_cat_parents = rtrim(get_category_parents($last_category->term_id, true, ','),',');
-                $cat_parents = explode(',',$get_cat_parents);
-
-                // Loop through parent categories and store in variable $cat_display
-                $cat_display = '';
-                foreach($cat_parents as $parents) {
-                    $cat_display .= '<li class="item-cat">'.$parents.'</li>';
-                    $cat_display .= '<li class="separator"> ' . $separator . ' </li>';
-                }
-
-            }
-
-            // If it's a custom post type within a custom taxonomy
-            $taxonomy_exists = taxonomy_exists($custom_taxonomy);
-            if(empty($last_category) && !empty($custom_taxonomy) && $taxonomy_exists) {
-
-                $taxonomy_terms = get_the_terms( $post->ID, $custom_taxonomy );
-                $cat_id         = $taxonomy_terms[0]->term_id;
-                $cat_nicename   = $taxonomy_terms[0]->slug;
-                $cat_link       = get_term_link($taxonomy_terms[0]->term_id, $custom_taxonomy);
-                $cat_name       = $taxonomy_terms[0]->name;
-
-            }
-
-            // Check if the post is in a category
-            if(!empty($last_category)){
-                echo $cat_display;
-                echo '<li class="item-current item-' . $post->ID . '"><strong class="bread-current bread-' . $post->ID . '" title="' . get_the_title() . '">' . get_the_title() . '</strong></li>';
-                // Else if post is in a custom taxonomy
-            }
-            else if(!empty($cat_id)) {
-
-                echo '<li class="item-cat item-cat-' . $cat_id . ' item-cat-' . $cat_nicename . '"><a class="bread-cat bread-cat-' . $cat_id . ' bread-cat-' . $cat_nicename . '" href="' . $cat_link . '" title="' . $cat_name . '">' . $cat_name . '</a></li>';
-                echo '<li class="separator"> ' . $separator . ' </li>';
-                echo '<li class="item-current item-' . $post->ID . '"><strong class="bread-current bread-' . $post->ID . '" title="' . get_the_title() . '">' . get_the_title() . '</strong></li>';
-
-            }
-            else {
-
-                echo '<li class="item-current item-' . $post->ID . '"><strong class="bread-current bread-' . $post->ID . '" title="' . get_the_title() . '">' . get_the_title() . '</strong></li>';
-
-            }
-
-        }
-        else if ( is_category() ) {
-
-            // Category page
-            echo '<li class="item-current item-cat"><strong class="bread-current bread-cat">' . single_cat_title('', false) . '</strong></li>';
-
-        }
-        else if ( is_page() ) {
-
-            // Standard page
-            if( $post->post_parent ){
-
-                // If child page, get parents
-                $anc = get_post_ancestors( $post->ID );
-
-                // Get parents in the right order
-                $anc = array_reverse($anc);
-
-                // Parent page loop
-                if ( !isset( $parents ) ) $parents = null;
-                foreach ( $anc as $ancestor ) {
-                    $parents .= '<li class="item-parent item-parent-' . $ancestor . '"><a class="bread-parent bread-parent-' . $ancestor . '" href="' . get_permalink($ancestor) . '" title="' . get_the_title($ancestor) . '">' . get_the_title($ancestor) . '</a></li>';
-                    $parents .= '<li class="separator separator-' . $ancestor . '"> ' . $separator . ' </li>';
-                }
-
-                // Display parent pages
-                echo $parents;
-
-                // Current page
-                echo '<li class="item-current item-' . $post->ID . '"><strong title="' . get_the_title() . '"> ' . get_the_title() . '</strong></li>';
-
-            } else {
-
-                // Just display current page if not parents
-                echo '<li class="item-current item-' . $post->ID . '"><strong class="bread-current bread-' . $post->ID . '"> ' . get_the_title() . '</strong></li>';
-
-            }
-
-        } else if ( is_tag() ) {
-
-            // Tag page
-
-            // Get tag information
-            $term_id        = get_query_var('tag_id');
-            $taxonomy       = 'post_tag';
-            $args           = 'include=' . $term_id;
-            $terms          = get_terms( $taxonomy, $args );
-            $get_term_id    = $terms[0]->term_id;
-            $get_term_slug  = $terms[0]->slug;
-            $get_term_name  = $terms[0]->name;
-
-            // Display the tag name
-            echo '<li class="item-current item-tag-' . $get_term_id . ' item-tag-' . $get_term_slug . '"><strong class="bread-current bread-tag-' . $get_term_id . ' bread-tag-' . $get_term_slug . '">' . $get_term_name . '</strong></li>';
-
-        } elseif ( is_day() ) {
-
-            // Day archive
-
-            // Year link
-            echo '<li class="item-year item-year-' . get_the_time('Y') . '"><a class="bread-year bread-year-' . get_the_time('Y') . '" href="' . get_year_link( get_the_time('Y') ) . '" title="' . get_the_time('Y') . '">' . get_the_time('Y') . ' Archives</a></li>';
-            echo '<li class="separator separator-' . get_the_time('Y') . '"> ' . $separator . ' </li>';
-
-            // Month link
-            echo '<li class="item-month item-month-' . get_the_time('m') . '"><a class="bread-month bread-month-' . get_the_time('m') . '" href="' . get_month_link( get_the_time('Y'), get_the_time('m') ) . '" title="' . get_the_time('M') . '">' . get_the_time('M') . ' Archives</a></li>';
-            echo '<li class="separator separator-' . get_the_time('m') . '"> ' . $separator . ' </li>';
-
-            // Day display
-            echo '<li class="item-current item-' . get_the_time('j') . '"><strong class="bread-current bread-' . get_the_time('j') . '"> ' . get_the_time('jS') . ' ' . get_the_time('M') . ' Archives</strong></li>';
-
-        } else if ( is_month() ) {
-
-            // Month Archive
-
-            // Year link
-            echo '<li class="item-year item-year-' . get_the_time('Y') . '"><a class="bread-year bread-year-' . get_the_time('Y') . '" href="' . get_year_link( get_the_time('Y') ) . '" title="' . get_the_time('Y') . '">' . get_the_time('Y') . ' Archives</a></li>';
-            echo '<li class="separator separator-' . get_the_time('Y') . '"> ' . $separator . ' </li>';
-
-            // Month display
-            echo '<li class="item-month item-month-' . get_the_time('m') . '"><strong class="bread-month bread-month-' . get_the_time('m') . '" title="' . get_the_time('M') . '">' . get_the_time('M') . ' Archives</strong></li>';
-
-        } else if ( is_year() ) {
-
-            // Display year archive
-            echo '<li class="item-current item-current-' . get_the_time('Y') . '"><strong class="bread-current bread-current-' . get_the_time('Y') . '" title="' . get_the_time('Y') . '">' . get_the_time('Y') . ' Archives</strong></li>';
-
-        } else if ( is_author() ) {
-
-            // Auhor archive
-
-            // Get the author information
-            global $author;
-            $userdata = get_userdata( $author );
-
-            // Display author name
-            echo '<li class="item-current item-current-' . $userdata->user_nicename . '"><strong class="bread-current bread-current-' . $userdata->user_nicename . '" title="' . $userdata->display_name . '">' . 'Author: ' . $userdata->display_name . '</strong></li>';
-
-        } else if ( get_query_var('paged') ) {
-
-            // Paginated archives
-            echo '<li class="item-current item-current-' . get_query_var('paged') . '"><strong class="bread-current bread-current-' . get_query_var('paged') . '" title="Page ' . get_query_var('paged') . '">'.__('Page') . ' ' . get_query_var('paged') . '</strong></li>';
-
-        } else if ( is_search() ) {
-
-            // Search results page
-            echo '<li class="item-current item-current-' . get_search_query() . '"><strong class="bread-current bread-current-' . get_search_query() . '" title="Search results for: ' . get_search_query() . '">Search results for: ' . get_search_query() . '</strong></li>';
-
-        } elseif ( is_404() ) {
-
-            // 404 page
-            echo '<li>' . 'Error 404' . '</li>';
-        }
-
-        echo '</ul>';
-
-    }
+// Customize excerpt word count length
+function custom_excerpt_length() {
+	return 22;
+}
+
+add_filter('excerpt_length', 'custom_excerpt_length');
+
+
+
+// Theme setup
+function learningWordPress_setup() {
+	
+	// Navigation Menus
+	register_nav_menus(array(
+		'primary' => __( 'Primary Menu'),
+		'footer' => __( 'Footer Menu'),
+	));
+	
+	// Add featured image support
+	add_theme_support('post-thumbnails');
+	add_image_size('small-thumbnail', 180, 120, true);
+	add_image_size('square-thumbnail', 80, 80, true);
+	add_image_size('banner-image', 920, 210, array('left', 'top'));
+	
+	// Add post type support
+	add_theme_support('post-formats', array('aside', 'gallery', 'link'));
+}
+
+add_action('after_setup_theme', 'learningWordPress_setup');
+
+// Add Widget Areas
+function ourWidgetsInit() {
+	
+	register_sidebar( array(
+		'name' => 'Sidebar',
+		'id' => 'sidebar1',
+		'before_widget' => '<div class="widget-item">',
+		'after_widget' => '</div>',
+		'before_title' => '<h2 class="widget-title">',
+		'after_title' => '</h2>',
+	));
+	
+	register_sidebar( array(
+		'name' => 'Footer Area 1',
+		'id' => 'footer1',
+		'before_widget' => '<div class="widget-item">',
+		'after_widget' => '</div>',
+		'before_title' => '<h2 class="widget-title">',
+		'after_title' => '</h2>',
+	));
+	
+	register_sidebar( array(
+		'name' => 'Footer Area 2',
+		'id' => 'footer2',
+		'before_widget' => '<div class="widget-item">',
+		'after_widget' => '</div>',
+		'before_title' => '<h2 class="widget-title">',
+		'after_title' => '</h2>',
+	));
+	
+	register_sidebar( array(
+		'name' => 'Footer Area 3',
+		'id' => 'footer3',
+		'before_widget' => '<div class="widget-item">',
+		'after_widget' => '</div>',
+		'before_title' => '<h2 class="widget-title">',
+		'after_title' => '</h2>',
+	));
+	
+	register_sidebar( array(
+		'name' => 'Footer Area 4',
+		'id' => 'footer4',
+		'before_widget' => '<div class="widget-item">',
+		'after_widget' => '</div>',
+		'before_title' => '<h2 class="widget-title">',
+		'after_title' => '</h2>',
+	));
+	
+}
+
+add_action('widgets_init', 'ourWidgetsInit');
+
+
+// Customize Appearance Options
+function learningWordPress_customize_register( $wp_customize ) {
+
+	$wp_customize->add_setting('lwp_link_color', array(
+		'default' => '#006ec3',
+		'transport' => 'refresh',
+	));
+
+	$wp_customize->add_setting('lwp_btn_color', array(
+		'default' => '#006ec3',
+		'transport' => 'refresh',
+	));
+
+	$wp_customize->add_setting('lwp_btn_hover_color', array(
+		'default' => '#004C87',
+		'transport' => 'refresh',
+	));
+
+	$wp_customize->add_section('lwp_standard_colors', array(
+		'title' => __('Standard Colors', 'LearningWordPress'),
+		'priority' => 30,
+	));
+
+	$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'lwp_link_color_control', array(
+		'label' => __('Link Color', 'LearningWordPress'),
+		'section' => 'lwp_standard_colors',
+		'settings' => 'lwp_link_color',
+	) ) );
+
+	$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'lwp_btn_color_control', array(
+		'label' => __('Button Color', 'LearningWordPress'),
+		'section' => 'lwp_standard_colors',
+		'settings' => 'lwp_btn_color',
+	) ) );
+
+	$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'lwp_btn_hover_color_control', array(
+		'label' => __('Button Hover Color', 'LearningWordPress'),
+		'section' => 'lwp_standard_colors',
+		'settings' => 'lwp_btn_hover_color',
+	) ) );
 
 }
-?>
+
+add_action('customize_register', 'learningWordPress_customize_register');
+
+
+
+// Output Customize CSS
+function learningWordPress_customize_css() { ?>
+
+	<style type="text/css">
+
+		a:link,
+		a:visited {
+			color: <?php echo get_theme_mod('lwp_link_color'); ?>;
+		}
+
+		.site-header nav ul li.current-menu-item a:link,
+		.site-header nav ul li.current-menu-item a:visited,
+		.site-header nav ul li.current-page-ancestor a:link,
+		.site-header nav ul li.current-page-ancestor a:visited {
+			background-color: <?php echo get_theme_mod('lwp_link_color'); ?>;
+		}
+
+		.btn-a,
+		.btn-a:link,
+		.btn-a:visited,
+		div.hd-search #searchsubmit {
+			background-color: <?php echo get_theme_mod('lwp_btn_color'); ?>;
+		}
+
+		.btn-a:hover,
+		div.hd-search #searchsubmit:hover {
+			background-color: <?php echo get_theme_mod('lwp_btn_hover_color'); ?>;
+		}
+
+	</style>
+
+<?php }
+
+add_action('wp_head', 'learningWordPress_customize_css');
+
+// Add Footer callout section to admin appearance customize screen
+function lwp_footer_callout($wp_customize) {
+	$wp_customize->add_section('lwp-footer-callout-section', array(
+		'title' => 'Footer Callout'
+	));
+
+	$wp_customize->add_setting('lwp-footer-callout-display', array(
+		'default' => 'No'
+	));
+
+	$wp_customize->add_control( new WP_Customize_Control($wp_customize, 'lwp-footer-callout-display-control', array(
+			'label' => 'Display this section?',
+			'section' => 'lwp-footer-callout-section',
+			'settings' => 'lwp-footer-callout-display',
+			'type' => 'select',
+			'choices' => array('No' => 'No', 'Yes' => 'Yes')
+		)));
+
+	$wp_customize->add_setting('lwp-footer-callout-headline', array(
+		'default' => 'Example Headline Text!'
+	));
+
+	$wp_customize->add_control( new WP_Customize_Control($wp_customize, 'lwp-footer-callout-headline-control', array(
+			'label' => 'Headline',
+			'section' => 'lwp-footer-callout-section',
+			'settings' => 'lwp-footer-callout-headline'
+		)));
+
+	$wp_customize->add_setting('lwp-footer-callout-text', array(
+		'default' => 'Example paragraph text.'
+	));
+
+	$wp_customize->add_control( new WP_Customize_Control($wp_customize, 'lwp-footer-callout-text-control', array(
+			'label' => 'Text',
+			'section' => 'lwp-footer-callout-section',
+			'settings' => 'lwp-footer-callout-text',
+			'type' => 'textarea'
+		)));
+
+	$wp_customize->add_setting('lwp-footer-callout-link');
+
+	$wp_customize->add_control( new WP_Customize_Control($wp_customize, 'lwp-footer-callout-link-control', array(
+			'label' => 'Link',
+			'section' => 'lwp-footer-callout-section',
+			'settings' => 'lwp-footer-callout-link',
+			'type' => 'dropdown-pages'
+		)));
+
+	$wp_customize->add_setting('lwp-footer-callout-image');
+
+	$wp_customize->add_control( new WP_Customize_Cropped_Image_Control($wp_customize, 'lwp-footer-callout-image-control', array(
+			'label' => 'Image',
+			'section' => 'lwp-footer-callout-section',
+			'settings' => 'lwp-footer-callout-image',
+			'width' => 750,
+			'height' => 500
+		)));
+}
+
+add_action('customize_register', 'lwp_footer_callout');
+
+/*
+Plugin Name: Gutenberg examples 01
+*/
+function gutenberg_examples_01_register_block() {
+    wp_register_script(
+        'gutenberg-examples-01',
+        plugins_url( 'block.js', __FILE__ ),
+        array( 'wp-blocks', 'wp-element' )
+    );
+ 
+    register_block_type( 'gutenberg-examples/example-01-basic', array(
+        'editor_script' => 'gutenberg-examples-01',
+    ) );
+ 
+}
+add_action( 'init', 'gutenberg_examples_01_register_block' );
